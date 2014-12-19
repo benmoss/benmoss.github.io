@@ -20,7 +20,7 @@ Clojure brings to the table.
 
 For reference, here's the full Clojure implementation:
 
-<pre><code class='brush: Clojure'>
+{% highlight clojure %}
 (defn nom [n] (take n (repeatedly #(rand-int n))))
 
 (defn sort-parts
@@ -41,17 +41,17 @@ For reference, here's the full Clojure implementation:
 
 (defn qsort [xs]
   (sort-parts (list xs)))
-</code></pre>
+{% endhighlight %}
 
 To get started, let's define a method which can give us our supply of random
 integers to feed into our sorter. The normal way to do this in Ruby would be
 with an iterator:
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 def nom(n)
   n.times.map { rand(1000) }
 end
-</code></pre>
+{% endhighlight %}
 
 In the Clojure example however, the numbers are pulled out of an lazy infinite
 sequence. We can reproduce that in Ruby using an
@@ -60,13 +60,13 @@ familiar with these, I highly recommend reading through Gregory Brown's
 tutorial on [building Enumerable & Enumerator from
 scratch](https://practicingruby.com/articles/shared/eislpkhxolnr).
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 def nom(n)
   Enumerator.new { |yielder|
     loop { yielder.yield(rand(1000)) }
   }.take(n)
 end
-</code></pre>
+{% endhighlight %}
 
 The Enumerator holds inside of itself a loop, and when it is called upon to
 give `n` objects by `take`, it runs the loop that many times to return from the
@@ -88,7 +88,7 @@ much of the other work as we can.
 
 My attempt at converting the Clojure example as closely as possible:
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 def qsort(collection)
   collection = [collection]
   Enumerator.new do |yielder|
@@ -109,7 +109,7 @@ def qsort(collection)
     end
   end
 end
-</code></pre>
+{% endhighlight %}
 
 Let's walk through using this code to generate our first result.  First we
 enter the method and wrap our array in another array, to emulate the data
@@ -118,7 +118,7 @@ destructuring assignment to split that list into `smallers` and `rest`, which
 since this our first loop, ends up being `[3, 4, 5, 3, 1, 2, 5, 4, 1]` and
 `[]`.
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 def qsort(collection)
   collection = [collection]
   # [[3, 4, 5, 3, 1, 2, 5, 4, 1]]
@@ -142,7 +142,7 @@ def qsort(collection)
     end
   end
 end
-</code></pre>
+{% endhighlight %}
 
 We then split `smallers` into our pivot and the rest of the `smallers`, which
 for lack of a better name I just borrowed `xs` from the Clojure example. We
@@ -154,7 +154,7 @@ Since there's nothing else to do, the loop continues again, emulating the
 recursion in the Clojure example. We again divide up the collection, leaving us
 with:
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 loop do
   smallers, *rest = collection
   # [1, 2, 1], [3, [4, 5, 3, 5, 4]]
@@ -171,12 +171,12 @@ loop do
     # ...
   end
 end
-</code></pre>
+{% endhighlight %}
 
 We lucked out and got a 1 as our pivot already, leaving our `smallers` list
 empty on the next recursion:
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 loop do
   smallers, *rest = collection
   # [], [1, [2, 1], 3, [4, 5, 3, 5, 4]]
@@ -191,7 +191,7 @@ loop do
     yielder.yield(sorted)
   end
 end
-</code></pre>
+{% endhighlight %}
 
 So we hop down to the else clause and yield the 1, and leave the rest of the
 work until the method gets called upon to continue. By pushing the larger
@@ -207,21 +207,21 @@ optimizing for sorting the smaller sets first, if we use Ruby 2.0's lazy
 enumerable's on the larger sets, we can avoid doing the work of the `reject`
 until we absolutely need to. Just by swapping
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 collection = [xs.select(&smaller),
               pivot,
               xs.reject(&smaller),
               *rest]
-</code></pre>
+{% endhighlight %}
 
 for
 
-<pre><code class='brush: ruby'>
+{% highlight ruby %}
 collection = [xs.select(&smaller),
               pivot,
               xs.lazy.reject(&smaller),
               *rest]
-</code></pre>
+{% endhighlight %}
 
 I was able to see the time for grabbing the first 20 results of an array of
 100,000 random integers drop from 65ms to 28ms. Before you get hasty though,
